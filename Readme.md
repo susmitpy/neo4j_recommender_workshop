@@ -38,7 +38,7 @@ graph LR
 - Cypher Query Language
 - Create only directed relationships, but traverse them any way.
 
-<img src="./public/neo_intro.png" class="w-3/4" style="background:white"/>
+<img src="./public/neo_intro.jpeg" class="w-3/4" style="background:white"/>
 
 ### Intro to Neo4j - Cypher Query Language
 
