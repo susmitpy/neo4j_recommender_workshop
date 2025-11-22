@@ -1,0 +1,11 @@
+services:
+  neo4j:
+    image: neo4j:2025.10.1
+    container_name: neo4j
+    ports:
+      - "7474:7474" # Browser
+      - "7687:7687" # Bolt
+    environment:
+      - NEO4J_AUTH=neo4j/test1234
+    volumes:
+      - neo4j_data:/data
