@@ -66,7 +66,20 @@ RETURN actor.name
 
 2. Login with Email ID and Password (if you use social login, don't forget to signout after the session)
 
-3. 
+3. Choose project having GDS Library enabled
+
+4. Import Movies Dataset
+
+5. Data Exploration using Cypher Queries
+
+6. Naive Recommender System using Cypher Queries (put dummy data of user watching movies)
+
+    - Content Based Filtering
+    - Collaborative Filtering
+
+7. Advanced Recommender System using Graph Data Science Library
+
+    - TODO
 
 ## Local Setup for hands-on practice
 1. **Clone the Repository**  
