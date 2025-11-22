@@ -1,56 +1,74 @@
-# Neo4j Recommender Workshop
+# Neo4j Recommender Workshop - Prepared for VSIT College, Mumbai
 
-## Prepared for VSIT College, Mumbai
+## About Me
 
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Title</title>
-    <meta charset="utf-8">
-    <style>
-      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
-      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
-      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+### Susmit Vengurlekar
 
-      body { font-family: 'Droid Serif'; }
-      h1, h2, h3 {
-        font-family: 'Yanone Kaffeesatz';
-        font-weight: normal;
-      }
-      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
-    </style>
-  </head>
-  <body>
-    <textarea id="source">
+### Data Scientist, Backend Developer, AWS Solutions Architect, Neo4j Professional
 
-class: center, middle
+- Data Scientist at AIDAX
+- Certified Neo4j Professional
+- Programming Experience of **8+ years**, Corporate Experience of **4+ years** 
+- HSC Commerce & Bsc IT from DG Ruparel College, Mumbai
 
-# Title
+## Let's Cover the Basics first
 
----
+### What is a Knowledge Graph?
 
-# Agenda
+- A Knowledge Graph is a graph database that stores information in the form of nodes and edges
+- Nodes represent entities and edges represent relationships between entities
+- Properties can be attached to nodes and edges
 
-1. Introduction
-2. Deep-dive
-3. ...
+#### Example
 
----
+```mermaid
+graph LR
+    P[("Person {Name: 'Susmit'}")]
+    PL[("Programming Language {Name: 'Python'}")]
+    
+    P -->|"Knows {Since: 2016}"| PL
+```
 
-# Introduction
 
-    </textarea>
-    <script src="https://remarkjs.com/downloads/remark-latest.min.js">
-    </script>
-    <script>
-      var slideshow = remark.create();
-    </script>
-  </body>
-</html>
+### Intro to Neo4j
 
-## Getting Started
+- Graph database
+- Labels, Nodes, Relationships, and Properties
+- Native Graph Storage: Store data using pointers on disk
+- Cypher Query Language
+- Create only directed relationships, but traverse them any way.
 
-### Local Setup
+<img src="./public/neo_intro.png" class="w-3/4" style="background:white"/>
+
+### Intro to Neo4j - Cypher Query Language
+
+#### To find all actors who acted in the movie "The Matrix"
+
+
+#### Instead of this
+```sql
+SELECT actors.name
+FROM actors
+ 	LEFT JOIN acted_in ON acted_in.actor_id = actors.id
+	LEFT JOIN movies ON movies.id = acted_in.movie_id
+WHERE movies.title = "The Matrix"
+```
+
+### You can write this
+```cypher
+MATCH (actor:Actor)-[:ACTED_IN]->(movie:Movie {title: 'The Matrix'})
+RETURN actor.name
+```
+
+
+## Enough Talk, Time to Get our Hands Dirty!
+1. Spin up neo4j sandbox by going to <a href="https://sandbox.neo4j.com" target="_blank">sandbox.neo4j.com</a>
+
+2. Login with Email ID and Password (if you use social login, don't forget to signout after the session)
+
+3. 
+
+## Local Setup for hands-on practice
 1. **Clone the Repository**  
    ```bash
    git clone https://github.com/susmitpy/neo4j_recommender_workshop.git
@@ -68,9 +86,16 @@ class: center, middle
     - Username: `neo4j`
     - Password: `test1234`
 
-### Guide for the Workshop
-1. Spin up neo4j sandbox by going to <a href="https://sandbox.neo4j.com" target="_blank">sandbox.neo4j.com</a>
+## Learning Resources
 
-2. Login with Email ID and Password (if you use social login, don't forget to signout after the session)
+- Neo4j Official Documentation - [Neo4j Docs](https://neo4j.com/docs/)
 
-3. 
+- Neo4j Courses @ Graph Academy - [Graph Academy](https://graphacademy.neo4j.com/categories/)
+
+- Neo4j Cypher Refcard - [Cypher Refcard](https://neo4j.com/docs/cypher-refcard/current/)
+
+- Certifications - [Neo4j Certifications](https://graphacademy.neo4j.com/certifications/)
+    - Neo4j Certified Professional
+    - Neo4j Graph Data Science Certification
+
+- My session of QnA on Neo4j Knowledge Graph at Graph Database Mumbai Meetup - [Watch Here](https://youtu.be/JpysxH4Z5Fw)
