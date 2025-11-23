@@ -1,857 +1,295 @@
-# Neo4j Recommender Workshop
+# Neo4j Recommender Workshop: From Zero to Graph Hero
 
-## About Me
 
-### Susmit Vengurlekar
+## 1. Introduction (10 Mins)
 
-### Data Scientist, Backend Developer, AWS Solutions Architect, Neo4j Professional
+### Who Am I?
+*   **Susmit Vengurlekar**
+*   Data Scientist @ AIDAX | Neo4j Certified Professional
+*   *Expertise:* 8+ Years Programming, 4+ Years Corporate
+*   *Alumni:* DG Ruparel College (BSc IT)
 
-- Data Scientist at AIDAX
-- Certified Neo4j Professional
-- Programming Experience of **8+ years**, Corporate Experience of **4+ years** 
-- HSC Commerce & Bsc IT from DG Ruparel College, Mumbai
+### The Problem with SQL for Recommendations
+Imagine you want to find: *"Friends of my Friends who like movies I haven't seen yet."*
 
-## Let's Cover the Basics first
+**In SQL (Relational DB):**
+You need a `Users` table, a `Movies` table, a `Friends` table, and a `Ratings` table.
+The query involves massive **JOINs**.
+*   Join User to Friends -> Join Friends to their Friends -> Join Friends-of-Friends to Ratings -> Join Ratings to Movies.
+*   **Result:** It’s slow, complex, and computationally expensive.
+
+**In Graph (Neo4j):**
+We just "walk" the connections.
+*   Me -> (knows) -> Friend -> (knows) -> FoF -> (watched) -> Movie.
+*   **Result:** Millisecond responses.
 
 ### What is a Knowledge Graph?
+It is not a table. It is a network.
+*   **Nodes:** The "Things" (Nouns) - *e.g., Person, Movie*
+*   **Relationships:** The "Connections" (Verbs) - *e.g., ACTED_IN, RATED*
+*   **Properties:** Details about them - *e.g., Name, Title, Rating*
 
-- A Knowledge Graph is a graph database that stores information in the form of nodes and edges
-- Nodes represent entities and edges represent relationships between entities
-- Properties can be attached to nodes and edges
+#### Visualizing the Difference
 
-#### Example
+```mermaid
+flowchart LR
+    subgraph SQL_Perspective [SQL: Tables & Joins]
+    direction TB
+    T1[User Table] --- T2[Junction Table] --- T3[Movie Table]
+    end
+    
+    subgraph Graph_Perspective [Neo4j: Nodes & Links]
+    P((User: Susmit)) -->|RATED - stars: 5| M((Movie: Matrix))
+    P -->|FRIENDS_WITH| F((User: Ishan))
+    end
+```
+
+---
+
+## 2. Neo4j Internals: Why is it so fast? (5 Mins)
+
+> **Instructor Note:** Explain "Index-Free Adjacency".
+
+In SQL, if I look for your friends, the DB scans an index (like the back of a book) to find the rows.
+In Neo4j, the data is stored as a **Linked List** on the hard disk.
+
+### How Data sits on Disk (Simplified)
+Every Node has a physical "pointer" (address) to its first relationship. Every Relationship points to the next one.
 
 ```mermaid
 graph LR
-    P[("Person {Name: 'Susmit'}")]
-    PL[("Programming Language {Name: 'Python'}")]
+    NodeA[Node A Record<br/>ptr_to_rel: 1001]
     
-    P -->|"Knows {Since: 2016}"| PL
+    Rel1001[Rel 1001<br/>Type: KNOWS<br/>Next_Rel: 1002]
+    Rel1002[Rel 1002<br/>Type: RATED<br/>Next_Rel: NULL]
+    NodeB[Node B Record]
+    
+    NodeA -.->|Direct Pointer| Rel1001
+    Rel1001 -.->|Direct Pointer| Rel1002
+    Rel1001 -.->|Points to| NodeB
 ```
 
+**The Magic:** To find friends, Neo4j doesn't "search." It just "chases pointers." This is called **Index-Free Adjacency**. It converts a search problem into a traversal problem.
 
-### Intro to Neo4j
+---
 
-- Graph database
-- Labels, Nodes, Relationships, and Properties
-- Native Graph Storage: Store data using pointers on disk
-- Cypher Query Language
-- Create only directed relationships, but traverse them any way.
+## 3. Setup & Syntax (15 Mins)
 
-<img src="./public/neo_intro.jpeg" class="w-3/4" style="background:white"/>
+### Hands-on: Get the Environment
+1.  Go to [sandbox.neo4j.com](https://sandbox.neo4j.com)
+2.  Login (Email/Google).
+3.  Select **"Graph Data Science"** (Featured Project).
+4.  Click **"Open"** (Neo4j Browser).
 
-### Intro to Neo4j - Cypher Query Language
+### The Cypher Syntax
+Cypher is ASCII Art. You draw what you want to find.
 
-#### To find all actors who acted in the movie "The Matrix"
+*   `()` represents a Node.
+*   `--` represents a Relationship.
+*   `-->` represents a Directed Relationship.
+*   `[]` contains relationship details.
 
+**Comparison:**
 
-#### Instead of this
+**SQL:**
 ```sql
-SELECT actors.name
-FROM actors
- 	LEFT JOIN acted_in ON acted_in.actor_id = actors.id
-	LEFT JOIN movies ON movies.id = acted_in.movie_id
-WHERE movies.title = "The Matrix"
+SELECT name FROM users WHERE id = 1
 ```
-
-### You can write this
+**Cypher:**
 ```cypher
-MATCH (actor:Actor)-[:ACTED_IN]->(movie:Movie {title: 'The Matrix'})
-RETURN actor.name
+MATCH (u:User {id: 1}) RETURN u.name
 ```
 
-
-## Enough Talk, Time to Get our Hands Dirty!
-
-1. Visit this Github Repository - [https://bit.ly/neo4j-vsit-2025](https://github.com/susmitpy/neo4j_recommender_workshop)</a>
-
-2. Spin up neo4j sandbox by going to <a href="https://sandbox.neo4j.com" target="_blank">sandbox.neo4j.com</a>
-
-3. Login with Email ID and Password (if you use social login, don't forget to signout after the session)
-
-4. Choose "Graph Data Science" from the "Featured Dataset" section
-5. Open Neo4j Browser (it opens in a new tab)
-
-6. Click on authentication type and choose "Username and Password"
-
-7. You can find the password in the "Connection Details" section on the sandbox page 
-
-8. Your first step is to delete the existing data. Run the following command in the query editor
+### Step 0: Clean Slate
+We need an empty database. Run this:
 ```cypher
 MATCH (n) DETACH DELETE n;
 ```
 
-Nice, this format will make it much easier to teach and later turn into “solutions” vs “student sheet”.
-
-Below is a **drop-in workshop script**, structured as:
-
-* Sections **A, B, C**
-* Each exercise:
-
-  1. **Example** – describe scenario + show a Cypher query
-  2. **Your Turn** – question for students
-  3. **Answer** – full solution (you can move these to a separate file later)
-
 ---
 
-# A. Getting the Graph Ready (Basics)
+## 4. Data Loading (The "ETL") (20 Mins)
 
-## A.0 – Create Constraints (Indexes)
+We are building a Movie Recommender. We need **Constraints**, **Movies**, and **Ratings**.
 
-> **Goal:** Show how to make lookups fast and avoid duplicate nodes.
+### A.0 Create Constraints
+(Ensures we don't have duplicate Movies or Users. Like a Primary Key).
 
-### Example A.0 – Constraint on `Movie`
-
-**Scenario**
-
-We want to ensure each `Movie` is uniquely identified by `movieId`. Neo4j can enforce this with a **uniqueness constraint**, which also creates an index.
-
-**Example Query**
-
+**Copy/Paste:**
 ```cypher
-// Create a uniqueness constraint for Movie.movieId
-CREATE CONSTRAINT movie_id IF NOT EXISTS
-FOR (m:Movie)
-REQUIRE m.movieId IS UNIQUE;
+CREATE CONSTRAINT user_id IF NOT EXISTS FOR (u:User) REQUIRE u.userId IS UNIQUE;
+CREATE CONSTRAINT movie_id IF NOT EXISTS FOR (m:Movie) REQUIRE m.movieId IS UNIQUE;
+CREATE CONSTRAINT genre_name IF NOT EXISTS FOR (g:Genre) REQUIRE g.name IS UNIQUE;
 ```
 
----
+### A.1 Load Movies & Genres
+We will load a CSV, split the genres (e.g., "Action|Adventure"), and connect them.
 
-### Your Turn – Exercise A.0
+**Discussion:** Notice `MERGE`. It means "Create if it doesn't exist, otherwise just find it."
 
-Create similar uniqueness constraints for:
-
-* `User.userId`
-* `Genre.name`
-* `Tag.name`
-
-You can use this **template** and replace `<fill here>`:
-
-```cypher
-CREATE CONSTRAINT <fill here> IF NOT EXISTS
-FOR (n:<fill here>)
-REQUIRE n.<fill here> IS UNIQUE;
-```
-
-#### Answer A.0
-
-```cypher
-// Users
-CREATE CONSTRAINT user_id IF NOT EXISTS
-FOR (u:User)
-REQUIRE u.userId IS UNIQUE;
-
-// Genres
-CREATE CONSTRAINT genre_name IF NOT EXISTS
-FOR (g:Genre)
-REQUIRE g.name IS UNIQUE;
-
-// Tags
-CREATE CONSTRAINT tag_name IF NOT EXISTS
-FOR (t:Tag)
-REQUIRE t.name IS UNIQUE;
-```
-
----
-
-## A.1 – Load Movies and Genres from CSV
-
-> **Goal:** Learn `LOAD CSV`, basic `MERGE`, and modeling genres as separate nodes.
-
-CSV URL:
-
-```text
-https://raw.githubusercontent.com/susmitpy/neo4j_recommender_workshop/refs/heads/main/ml-latest-small/movies.csv
-```
-
-### Example A.1 – Load Movies Without Genres
-
-**Scenario**
-
-First, we’ll just create movies with `movieId` and `title` from the CSV, ignoring genres and year.
-
-**Example Query**
-
+**Run This:**
 ```cypher
 LOAD CSV WITH HEADERS FROM
   "https://raw.githubusercontent.com/susmitpy/neo4j_recommender_workshop/refs/heads/main/ml-latest-small/movies.csv"
 AS row
+WITH row, toInteger(row.movieId) AS movieId
 
-WITH row, toInteger(row.movieId) AS movieId, row.title AS title
-
+// Create Movie
 MERGE (m:Movie {movieId: movieId})
-SET m.title = title;
-```
+SET m.title = row.title,
+    m.url = "https://movielens.org/movies/" + row.movieId
 
----
-
-### Your Turn – Exercise A.1
-
-Now extend this to:
-
-1. Extract the **year** from the title (e.g. `"Toy Story (1995)"` → `1995`) and store it as `m.year`.
-2. Split the `genres` string (e.g. `"Adventure|Animation|Children"`) into multiple `Genre` nodes.
-3. Connect each movie to its genres with `(:Movie)-[:IN_GENRE]->(:Genre)`.
-
-**Write the full query**.
-
-#### Answer A.1
-
-```cypher
-LOAD CSV WITH HEADERS FROM
-  "https://raw.githubusercontent.com/susmitpy/neo4j_recommender_workshop/refs/heads/main/ml-latest-small/movies.csv"
-AS row
-
-WITH row,
-     toInteger(row.movieId) AS movieId,
-     row.title AS title,
-     row.genres AS genresString,
-     // extract 4-digit year inside parentheses, if present
-     apoc.text.regexGroups(title, ".*\\((\\d{4})\\).*") AS yearMatch
-
-MERGE (m:Movie {movieId: movieId})
-SET m.title = title,
-    m.year  = CASE
-                WHEN size(yearMatch) > 0 THEN toInteger(yearMatch[0][1])
-                ELSE null
-              END
-
-WITH m, genresString
-WHERE genresString IS NOT NULL
-  AND genresString <> "(no genres listed)"
-
-UNWIND split(genresString, "|") AS genreName
-MERGE (g:Genre {name: genreName})
+// Handle Genres
+WITH m, row.genres AS genres
+UNWIND split(genres, "|") AS genre
+MERGE (g:Genre {name: genre})
 MERGE (m)-[:IN_GENRE]->(g);
 ```
 
----
+### A.2 Load Ratings
+Users rating movies.
 
-## A.2 – Load Users and Ratings from CSV
-
-> **Goal:** Build the `User`–`RATED`–`Movie` graph.
-
-CSV URL:
-
-```text
-https://raw.githubusercontent.com/susmitpy/neo4j_recommender_workshop/refs/heads/main/ml-latest-small/ratings.csv
-```
-
-### Example A.2 – Create One Rating
-
-**Scenario**
-
-Imagine user 1 rated movie 1 with 4.0. We could manually create:
-
-**Example Query**
-
-```cypher
-MERGE (u:User {userId: 1})
-MERGE (m:Movie {movieId: 1})
-MERGE (u)-[r:RATED]->(m)
-SET r.rating = 4.0;
-```
-
----
-
-### Your Turn – Exercise A.2
-
-Load all ratings from `ratings.csv`:
-
-1. Create or reuse `User` nodes by `userId`.
-2. Match existing `Movie` nodes by `movieId`.
-3. Create `RATED` relationships with properties:
-
-   * `rating` (float)
-   * `timestamp` (integer)
-
-You can use this **template**:
-
-```cypher
-LOAD CSV WITH HEADERS FROM
-  "<fill here>"
-AS row
-
-WITH
-  toInteger(row.userId)    AS userId,
-  toInteger(row.movieId)   AS movieId,
-  toFloat(row.rating)      AS rating,
-  toInteger(row.timestamp) AS ts
-
-MERGE (<fill here>:User {userId: userId})
-WITH <fill here>, movieId, rating, ts
-MATCH (m:Movie {movieId: movieId})
-MERGE (<fill here>)-[r:RATED]->(m)
-SET r.rating    = <fill here>,
-    r.timestamp = <fill here>;
-```
-
-#### Answer A.2
-
+**Run This:**
 ```cypher
 LOAD CSV WITH HEADERS FROM
   "https://raw.githubusercontent.com/susmitpy/neo4j_recommender_workshop/refs/heads/main/ml-latest-small/ratings.csv"
 AS row
+WITH toInteger(row.userId) AS userId, 
+     toInteger(row.movieId) AS movieId, 
+     toFloat(row.rating) AS rating
 
-WITH
-  toInteger(row.userId)    AS userId,
-  toInteger(row.movieId)   AS movieId,
-  toFloat(row.rating)      AS rating,
-  toInteger(row.timestamp) AS ts
-
-MERGE (u:User {userId: userId})
-WITH u, movieId, rating, ts
 MATCH (m:Movie {movieId: movieId})
+MERGE (u:User {userId: userId})
 MERGE (u)-[r:RATED]->(m)
-SET r.rating    = rating,
-    r.timestamp = ts;
+SET r.rating = rating;
 ```
 
 ---
 
-## A.3 – Quick Exploration Query
+## 5. Basic Recommendations (Cypher) (20 Mins)
 
-> **Goal:** Let them “see” something interesting quickly.
+### Rec Engine 1: Content-Based Filtering
+*   *Logic:* "You liked The Matrix? Here are other Action/Sci-Fi movies."
 
-### Example A.3 – 5 Random Movies
+**Exercise:** Find movies that share genres with "Toy Story (1995)".
 
-**Scenario**
-
-Show 5 random movies to prove data is loaded.
-
-**Example Query**
-
+**The Query:**
 ```cypher
-MATCH (m:Movie)
-RETURN m.title AS title, m.year AS year
-ORDER BY rand()
-LIMIT 5;
+MATCH (m:Movie {title: "Toy Story (1995)"})-[:IN_GENRE]->(g:Genre)
+MATCH (rec:Movie)-[:IN_GENRE]->(g)
+WHERE rec <> m // Don't recommend the movie itself
+RETURN rec.title, collect(g.name) as sharedGenres, count(g) as overlap
+ORDER BY overlap DESC
+LIMIT 10;
 ```
 
----
+### Rec Engine 2: Collaborative Filtering (The "Wisdom of Crowds")
+*   *Logic:* "People who liked Toy Story also liked..."
 
-### Your Turn – Exercise A.3
+**The Analogy:**
+If User A likes Apples and Bananas.
+And User B likes Apples, Bananas, and **Cherries**.
+Then User A will probably like **Cherries**.
 
-Find the **top 10 most rated movies**:
+**Exercise:** Find movies recommended by peers who also liked "Toy Story".
 
-* Show `movie` title
-* Number of ratings (`numRatings`)
-* Average rating (`avgRating`)
-* Order by `numRatings` descending
-
-**Write the full query.**
-
-#### Answer A.3
-
+**The Query:**
 ```cypher
-MATCH (:User)-[r:RATED]->(m:Movie)
-RETURN m.title AS movie,
-       count(r) AS numRatings,
-       round(avg(r.rating), 2) AS avgRating
-ORDER BY numRatings DESC
+// 1. Find Toy Story
+MATCH (m:Movie {title: "Toy Story (1995)"})
+// 2. Find users who liked it (Rating > 3)
+MATCH (m)<-[r1:RATED]-(u:User) WHERE r1.rating > 3
+// 3. Find other movies those users liked
+MATCH (u)-[r2:RATED]->(rec:Movie) WHERE r2.rating > 3
+// 4. Filter out Toy Story itself
+WHERE rec <> m
+// 5. Rank by frequency
+RETURN rec.title, count(u) as frequent_recommendation
+ORDER BY frequent_recommendation DESC
 LIMIT 10;
 ```
 
 ---
 
-# B. Recommendation with Pure Cypher
+## 6. Graph Data Science (GDS) (25 Mins)
 
-## B.1 – Content-Based: Similar Movies by Genre
+Before we run the code, we need to understand two concepts: **Projection** and **Similarity**.
 
-> **Goal:** Show how structure (genres) can drive recommendations.
+### Concept 1: The Graph Projection (The Workbench)
 
-We’ll use `"Toy Story (1995)"` as an example anchor movie.
+Neo4j stores data on disk (Database). GDS algorithms run in RAM (Memory).
+We cannot run complex math directly on the disk because it would be too slow if thousands of users are updating data at the same time.
 
-### Example B.1 – Same Genres, Different Movies
+We create a **Projection**: We take a snapshot of the graph, load it into RAM, and run our math there.
 
-**Scenario**
-
-Find movies that share at least one genre with `"Toy Story (1995)"`.
-
-**Example Query**
-
-```cypher
-MATCH (m:Movie {title: "Toy Story (1995)"})-[:IN_GENRE]->(g:Genre)
-MATCH (other:Movie)-[:IN_GENRE]->(g)
-WHERE other <> m
-RETURN other.title AS similarMovie,
-       collect(DISTINCT g.name) AS sharedGenres
-LIMIT 10;
+```mermaid
+graph LR
+    subgraph Disk [Neo4j Database - Disk]
+    D1[User] --RATED--> D2[Movie]
+    end
+    
+    subgraph Memory [GDS Projection - RAM]
+    M1[User List] 
+    M2[Movie List]
+    M3[Adjacency Matrix]
+    end
+    
+    Disk -->|LOAD - Graph Project | Memory
+    Memory -->|Stream Results| User
+    Memory -->|Write Results| Disk
 ```
+
+### Concept 2: Node Similarity (Jaccard Index)
+
+How do we know if User A and User B are similar? We look at the **Overlap**.
+
+*   User A watched: `[Matrix, Titanic, Avatar]`
+*   User B watched: `[Matrix, Titanic, Shrek]`
+
+Intersection (Same): `[Matrix, Titanic]` (2)
+Union (All unique): `[Matrix, Titanic, Avatar, Shrek]` (4)
+**Similarity Score:** 2 / 4 = **0.5 (50%)**
+
+We will use GDS to calculate this for *every single pair* of movies to find perfect matches.
 
 ---
 
-### Your Turn – Exercise B.1
-
-Write a query that:
-
-1. Finds `"Toy Story (1995)"` and its genres.
-2. Finds **other movies** that share those genres.
-3. Counts how many genres they share as `numSharedGenres`.
-4. Sorts by `numSharedGenres` (DESC), then by title.
-5. Returns top 20 movies.
-
-You can use this **template**:
-
-```cypher
-MATCH (m:Movie {title: "Toy Story (1995)"})-[:IN_GENRE]->(g:Genre)
-MATCH (m2:Movie)-[:IN_GENRE]->(g)
-WHERE <fill here>
-RETURN m2.title AS similarMovie,
-       collect(DISTINCT g.name) AS sharedGenres,
-       size(<fill here>) AS numSharedGenres
-ORDER BY <fill here> DESC, similarMovie
-LIMIT 20;
-```
-
-#### Answer B.1
-
-```cypher
-MATCH (m:Movie {title: "Toy Story (1995)"})-[:IN_GENRE]->(g:Genre)
-
-MATCH (m2:Movie)-[:IN_GENRE]->(g)
-WHERE m2 <> m
-
-WITH m2, collect(DISTINCT g.name) AS sharedGenres
-RETURN m2.title AS similarMovie,
-       sharedGenres,
-       size(sharedGenres) AS numSharedGenres
-ORDER BY numSharedGenres DESC, similarMovie
-LIMIT 20;
-```
-
----
-
-## B.2 – Collaborative: Find Similar Users
-
-> **Goal:** Users are similar if they like the same movies.
-
-We pick `User 1` as our demo user.
-
-### Example B.2 – Users Who Like the Same Movie
-
-**Scenario**
-
-Find all users who rated **`"Toy Story (1995)"`** with a rating ≥ 4.0.
-
-**Example Query**
-
-```cypher
-MATCH (m:Movie {title: "Toy Story (1995)"})<- [r:RATED]-(u:User)
-WHERE r.rating >= 4.0
-RETURN u.userId AS userId, r.rating AS rating;
-```
-
----
-
-### Your Turn – Exercise B.2
-
-Find **similar users to `User 1`** as follows:
-
-1. Get movies where `User 1` rating ≥ 4.0.
-2. Find other users who also rated those movies ≥ 4.0.
-3. Count how many such common “liked” movies they share.
-4. Only keep users with at least 3 common liked movies.
-5. Return `similarUser` and `commonLikes`, ordered by `commonLikes` descending.
-
-**Write the full query.**
-
-#### Answer B.2
-
-```cypher
-// Movies that User 1 liked (rating >= 4.0)
-MATCH (u1:User {userId: 1})-[r1:RATED]->(m:Movie)
-WHERE r1.rating >= 4.0
-
-// Other users who also liked those movies
-MATCH (u2:User)-[r2:RATED]->(m)
-WHERE u2 <> u1
-  AND r2.rating >= 4.0
-
-WITH u2, collect(DISTINCT m) AS commonLikedMovies
-WHERE size(commonLikedMovies) >= 3
-
-RETURN u2.userId AS similarUser,
-       size(commonLikedMovies) AS commonLikes
-ORDER BY commonLikes DESC, similarUser
-LIMIT 20;
-```
-
----
-
-## B.3 – Collaborative: Recommend Movies from Similar Users
-
-> **Goal:** Classic user–user collaborative filtering.
-
-### Example B.3 – Movies Liked by One Similar User
-
-**Scenario**
-
-Assume we already know that `User 2` is similar to `User 1`. We want to find movies `User 2` likes that `User 1` hasn’t rated yet.
-
-**Example Query**
-
-```cypher
-MATCH (u1:User {userId: 1})
-MATCH (u2:User {userId: 2})
-
-// Movies user 1 has rated
-MATCH (u1)-[r1:RATED]->(mRated:Movie)
-WITH u1, u2, collect(mRated) AS u1Movies
-
-// Movies user 2 likes
-MATCH (u2)-[r2:RATED]->(rec:Movie)
-WHERE r2.rating >= 4.0 AND NOT rec IN u1Movies
-
-RETURN rec.title AS candidateMovie, r2.rating AS user2Rating
-LIMIT 10;
-```
-
----
-
-### Your Turn – Exercise B.3
-
-Now **combine** similar users and recommendations:
-
-1. Reuse the **similar user** logic from Exercise B.2 (users who share ≥ 3 liked movies with `User 1`).
-2. From those similar users, collect movies they like (rating ≥ 4.0) that `User 1` has **not** rated.
-3. For each candidate movie, count how many similar users liked it (`numSimilarUsersLiked`).
-4. Return top 20 recommended movies ordered by `numSimilarUsersLiked` (DESC) and average rating from those similar users.
-
-This is a bit long; you can give them this **template**:
-
-```cypher
-// Step 1: Movies User 1 has rated
-MATCH (u1:User {userId: 1})-[r1:RATED]->(mRated:Movie)
-WITH u1, collect(mRated) AS u1Movies
-
-// Step 2: Find similar users (like Exercise B.2)
-MATCH (u1)-[r1:RATED]->(mCommon:Movie)
-WHERE <fill here>
-
-MATCH (u2:User)-[r2:RATED]->(mCommon)
-WHERE <fill here>
-
-WITH u1, u1Movies, u2, collect(DISTINCT mCommon) AS commonLikedMovies
-WHERE <fill here>  // at least 3
-
-// Step 3: Candidate movies
-MATCH (u2)-[rRec:RATED]->(rec:Movie)
-WHERE <fill here>  // rating condition and not in u1Movies
-
-WITH rec, count(DISTINCT u2) AS numSimilarUsersLiked,
-     avg(rRec.rating) AS avgRatingBySimilar
-
-RETURN rec.title AS recommendedMovie,
-       numSimilarUsersLiked,
-       round(avgRatingBySimilar, 2) AS avgRatingBySimilar
-ORDER BY numSimilarUsersLiked DESC, avgRatingBySimilar DESC, recommendedMovie
-LIMIT 20;
-```
-
-#### Answer B.3
-
-```cypher
-// Step 1: Movies User 1 has rated
-MATCH (u1:User {userId: 1})-[r1:RATED]->(mRated:Movie)
-WITH u1, collect(mRated) AS u1Movies
-
-// Step 2: Similar users (rating >= 4.0, at least 3 common liked movies)
-MATCH (u1)-[r1:RATED]->(mCommon:Movie)
-WHERE r1.rating >= 4.0
-
-MATCH (u2:User)-[r2:RATED]->(mCommon)
-WHERE u2 <> u1
-  AND r2.rating >= 4.0
-
-WITH u1, u1Movies, u2, collect(DISTINCT mCommon) AS commonLikedMovies
-WHERE size(commonLikedMovies) >= 3
-
-// Step 3: Candidate movies from similar users
-MATCH (u2)-[rRec:RATED]->(rec:Movie)
-WHERE rRec.rating >= 4.0
-  AND NOT rec IN u1Movies
-
-WITH rec, count(DISTINCT u2) AS numSimilarUsersLiked,
-     avg(rRec.rating)        AS avgRatingBySimilar
-
-RETURN rec.title AS recommendedMovie,
-       numSimilarUsersLiked,
-       round(avgRatingBySimilar, 2) AS avgRatingBySimilar
-ORDER BY numSimilarUsersLiked DESC, avgRatingBySimilar DESC, recommendedMovie
-LIMIT 20;
-```
-
----
-
-# C. Recommendations with Graph Data Science (GDS)
-
-## C.1 – Create a GDS Graph Projection
-
-> **Goal:** Show how to prepare data for GDS algorithms.
-
-We’ll build a projection called `"movieGraph"` with `User`, `Movie` and `RATED`.
-
-### Example C.1 – Simple Projection Without Properties
-
-**Scenario**
-
-Just project the nodes and relationships, ignoring properties.
-
-**Example Query**
+### Step C.1: Create the Projection
+We load `Users`, `Movies`, and the `RATED` relationship into memory.
 
 ```cypher
 CALL gds.graph.project(
-  'simpleMovieGraph',
-  ['User', 'Movie'],
-  'RATED'
-);
-```
-
----
-
-### Your Turn – Exercise C.1
-
-Create a projection named `"movieGraph"` that:
-
-* Includes node labels: `User` and `Movie`
-* Includes relationship type: `RATED` as **UNDIRECTED**
-* Keeps `rating` as a relationship property
-
-**Write the full query.**
-
-#### Answer C.1
-
-```cypher
-CALL gds.graph.project(
-  'movieGraph',
-  ['User', 'Movie'],
+  'myGraph',                // Name of graph in memory
+  ['User', 'Movie'],        // Nodes to load
   {
-    RATED: {
-      type: 'RATED',
-      orientation: 'UNDIRECTED',
-      properties: 'rating'
-    }
+    RATED: {orientation: 'UNDIRECTED'} // Treat rating as a two-way street
   }
 );
 ```
 
----
-
-## C.2 – Node Similarity (Stream)
-
-> **Goal:** Find similar movies based on overlapping users.
-
-### Example C.2 – Node Similarity on All Nodes
-
-**Scenario**
-
-Run node similarity on **all nodes** just to see what happens.
-
-**Example Query**
+### Step C.2: Run Node Similarity
+This compares every movie to every other movie based on who watched them.
 
 ```cypher
-CALL gds.nodeSimilarity.stream('movieGraph', {})
+CALL gds.nodeSimilarity.stream('myGraph')
 YIELD node1, node2, similarity
-RETURN gds.util.asNode(node1) AS n1,
-       gds.util.asNode(node2) AS n2,
-       round(similarity, 3) AS similarity
-LIMIT 10;
-```
-
----
-
-### Your Turn – Exercise C.2
-
-Run node similarity only for **Movie** nodes:
-
-1. Use `gds.nodeSimilarity.stream`.
-2. Restrict to `nodeLabels: ['Movie']` and `relationshipTypes: ['RATED']`.
-3. Return `movie1`, `movie2`, and `similarity` (rounded to 3 decimals).
-4. Order by `similarity` descending.
-5. Limit to 10.
-
-You can use this **template**:
-
-```cypher
-CALL gds.nodeSimilarity.stream(
-  'movieGraph',
-  {
-    nodeLabels: ['<fill here>'],
-    relationshipTypes: ['<fill here>'],
-    similarityCutoff: 0.1
-  }
-)
-YIELD node1, node2, similarity
-WITH gds.util.asNode(node1) AS m1,
-     gds.util.asNode(node2) AS m2,
-     similarity
-RETURN <fill here> AS movie1,
-       <fill here> AS movie2,
-       round(similarity, 3) AS similarity
+WHERE similarity > 0.5  // Only show strong matches
+RETURN gds.util.asNode(node1).title AS Movie_A,
+       gds.util.asNode(node2).title AS Movie_B,
+       similarity
 ORDER BY similarity DESC
 LIMIT 10;
 ```
 
-#### Answer C.2
+### Step C.3: The "Hybrid" Recommendation
+Now we know exactly which movies are mathematically similar.
 
-```cypher
-CALL gds.nodeSimilarity.stream(
-  'movieGraph',
-  {
-    nodeLabels: ['Movie'],
-    relationshipTypes: ['RATED'],
-    similarityCutoff: 0.1
-  }
-)
-YIELD node1, node2, similarity
-WITH gds.util.asNode(node1) AS m1,
-     gds.util.asNode(node2) AS m2,
-     similarity
-RETURN m1.title AS movie1,
-       m2.title AS movie2,
-       round(similarity, 3) AS similarity
-ORDER BY similarity DESC
-LIMIT 10;
-```
+**Scenario:** I just watched **"Inception"**. What should I watch next?
 
----
+1.  Find "Inception".
+2.  Use the similarity math (from GDS) to find the closest match.
 
-## C.3 – Write `SIMILAR_TO` Relationships
-
-> **Goal:** Persist similarity so we can use it with normal Cypher.
-
-### Example C.3 – Write with a High Cutoff
-
-**Scenario**
-
-Write `SIMILAR_TO` relationships only for very high similarity.
-
-**Example Query**
-
-```cypher
-CALL gds.nodeSimilarity.write(
-  'movieGraph',
-  {
-    nodeLabels: ['Movie'],
-    relationshipTypes: ['RATED'],
-    similarityCutoff: 0.8,
-    writeRelationshipType: 'SIMILAR_TO',
-    writeProperty: 'score'
-  }
-);
-```
-
----
-
-### Your Turn – Exercise C.3
-
-Write similarities as `SIMILAR_TO` relationships with:
-
-* `similarityCutoff: 0.5`
-* `writeRelationshipType: 'SIMILAR_TO'`
-* `writeProperty: 'score'`
-
-**Write the full query.**
-
-#### Answer C.3
-
-```cypher
-CALL gds.nodeSimilarity.write(
-  'movieGraph',
-  {
-    nodeLabels: ['Movie'],
-    relationshipTypes: ['RATED'],
-    similarityCutoff: 0.5,
-    writeRelationshipType: 'SIMILAR_TO',
-    writeProperty: 'score'
-  }
-)
-YIELD nodesCompared, relationshipsWritten, similarityCutoff;
-```
-
-Check sample:
-
-```cypher
-MATCH (m1:Movie)-[s:SIMILAR_TO]->(m2:Movie)
-RETURN m1.title AS movie1,
-       m2.title AS movie2,
-       round(s.score, 3) AS score
-ORDER BY score DESC
-LIMIT 10;
-```
-
----
-
-## C.4 – Recommend Using `SIMILAR_TO` Relationships
-
-> **Goal:** Use graph algorithm output like any other relationship.
-
-### Example C.4 – Similar to One Movie
-
-**Scenario**
-
-Find movies similar to `"Toy Story (1995)"` using `SIMILAR_TO`.
-
-**Example Query**
-
-```cypher
-MATCH (m:Movie {title: "Toy Story (1995)"})-[s:SIMILAR_TO]->(other:Movie)
-RETURN other.title AS similarMovie,
-       round(s.score, 3) AS similarityScore
-ORDER BY similarityScore DESC, similarMovie
-LIMIT 10;
-```
-
----
-
-### Your Turn – Exercise C.4
-
-For `"Toy Story (1995)"`, find similar movies and also show:
-
-* `similarityScore` (from `s.score`)
-* `avgRating` (average of all ratings for that movie)
-* `numRatings` (number of ratings)
-
-Sort by:
-
-1. `similarityScore` (DESC)
-2. `avgRating` (DESC)
-3. `numRatings` (DESC)
-
-You can use this **template**:
-
-```cypher
-MATCH (m:Movie {title: "Toy Story (1995)"})-[s:SIMILAR_TO]->(other:Movie)
-MATCH (:User)-[r:RATED]->(other)
-WITH other, s,
-     avg(r.rating) AS avgRating,
-     count(r) AS numRatings
-RETURN other.title AS similarMovie,
-       round(<fill here>, 3) AS similarityScore,
-       round(avgRating, 2) AS avgRating,
-       numRatings
-ORDER BY <fill here> DESC, avgRating DESC, numRatings DESC
-LIMIT 10;
-```
-
-#### Answer C.4
-
-```cypher
-MATCH (m:Movie {title: "Toy Story (1995)"})-[s:SIMILAR_TO]->(other:Movie)
-MATCH (:User)-[r:RATED]->(other)
-WITH other, s,
-     avg(r.rating) AS avgRating,
-     count(r) AS numRatings
-RETURN other.title AS similarMovie,
-       round(s.score, 3) AS similarityScore,
-       round(avgRating, 2) AS avgRating,
-       numRatings
-ORDER BY similarityScore DESC, avgRating DESC, numRatings DESC
-LIMIT 10;
-```
-
----
+*(Note: In a real app, we would `.write()` the similarity relationships back to the graph, but for this workshop, we demonstrated the `.stream()` calculation).*
 
 ## Want to practice more at home?
 
