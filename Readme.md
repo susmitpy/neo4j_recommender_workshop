@@ -1,6 +1,5 @@
 # Neo4j Recommender Workshop: From Zero to Graph Hero
 
-
 ## 1. Introduction (10 Mins)
 
 ### Who Am I?
@@ -15,13 +14,13 @@ Imagine you want to find: *"Friends of my Friends who like movies I haven't seen
 **In SQL (Relational DB):**
 You need a `Users` table, a `Movies` table, a `Friends` table, and a `Ratings` table.
 The query involves massive **JOINs**.
-*   Join User to Friends -> Join Friends to their Friends -> Join Friends-of-Friends to Ratings -> Join Ratings to Movies.
-*   **Result:** It’s slow, complex, and computationally expensive.
+*   Join User $\to$ Friends $\to$ Friends' Friends $\to$ Ratings $\to$ Movies.
+*   **Result:** It’s slow, complex, and computationally expensive (O(n) or worse).
 
 **In Graph (Neo4j):**
 We just "walk" the connections.
-*   Me -> (knows) -> Friend -> (knows) -> FoF -> (watched) -> Movie.
-*   **Result:** Millisecond responses.
+*   Me $\to$ (knows) $\to$ Friend $\to$ (knows) $\to$ FoF $\to$ (watched) $\to$ Movie.
+*   **Result:** Millisecond responses (O(1) - constant time based on relationship depth).
 
 ### What is a Knowledge Graph?
 It is not a table. It is a network.
@@ -39,7 +38,7 @@ flowchart LR
     end
     
     subgraph Graph_Perspective [Neo4j: Nodes & Links]
-    P((User: Susmit)) -->|RATED - stars: 5| M((Movie: Matrix))
+    P((User: Susmit)) -->|RATED stars: 5| M((Movie: Matrix))
     P -->|FRIENDS_WITH| F((User: Ishan))
     end
 ```
@@ -48,7 +47,7 @@ flowchart LR
 
 ## 2. Neo4j Internals: Why is it so fast? (5 Mins)
 
-> **Instructor Note:** Explain "Index-Free Adjacency".
+> **Instructor Concept:** "Index-Free Adjacency"
 
 In SQL, if I look for your friends, the DB scans an index (like the back of a book) to find the rows.
 In Neo4j, the data is stored as a **Linked List** on the hard disk.
@@ -113,7 +112,7 @@ MATCH (n) DETACH DELETE n;
 We are building a Movie Recommender. We need **Constraints**, **Movies**, and **Ratings**.
 
 ### A.0 Create Constraints
-(Ensures we don't have duplicate Movies or Users. Like a Primary Key).
+(Ensures we don't have duplicate Movies or Users. Like a Primary Key in SQL).
 
 **Copy/Paste:**
 ```cypher
@@ -136,8 +135,7 @@ WITH row, toInteger(row.movieId) AS movieId
 
 // Create Movie
 MERGE (m:Movie {movieId: movieId})
-SET m.title = row.title,
-    m.url = "https://movielens.org/movies/" + row.movieId
+SET m.title = row.title
 
 // Handle Genres
 WITH m, row.genres AS genres
@@ -147,7 +145,7 @@ MERGE (m)-[:IN_GENRE]->(g);
 ```
 
 ### A.2 Load Ratings
-Users rating movies.
+Users rating movies. This connects the `User` nodes to the `Movie` nodes.
 
 **Run This:**
 ```cypher
@@ -163,6 +161,14 @@ MERGE (u:User {userId: userId})
 MERGE (u)-[r:RATED]->(m)
 SET r.rating = rating;
 ```
+
+### A.3 Verify the Data
+Let's look at what we built.
+
+```cypher
+MATCH (n) RETURN n LIMIT 25
+```
+*(Double-click the bubbles to expand them!)*
 
 ---
 
@@ -291,6 +297,8 @@ Now we know exactly which movies are mathematically similar.
 
 *(Note: In a real app, we would `.write()` the similarity relationships back to the graph, but for this workshop, we demonstrated the `.stream()` calculation).*
 
+---
+
 ## Want to practice more at home?
 
 You have a couple of options:
@@ -335,7 +343,6 @@ You have a couple of options:
 - My session of QnA on Neo4j Knowledge Graph at Graph Database Mumbai Meetup - [Watch Here](https://youtu.be/JpysxH4Z5Fw)
 
 ## Wait! What about AI ? 
-- Knowledge Graphs are being used to enhance AI models by providing structured context and relationships between data points.
+- Knowledge Graphs are being used to enhance AI models by providing structured context and relationships between data points (RAG).
 - Neo4j supports vector embeddings and similarity searches, making it easier to integrate with AI applications.
-3. LLM Graph Builder - [Neo4j LLM Graph Builder](https://neo4j.com/labs/genai-ecosystem/llm-graph-builder/) is a tool that helps in building knowledge graphs using large language models (LLMs).
-4. Don't forget, Data Science is also a key aspect of AI! Neo4j's Graph Data Science Library provides powerful algorithms for graph analytics and machine learning.
+- LLM Graph Builder - [Neo4j LLM Graph Builder](https://neo4j.com/labs/genai-ecosystem/llm-graph-builder/) is a tool that helps in building knowledge graphs using large language models (LLMs).
