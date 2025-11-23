@@ -1,4 +1,4 @@
-# Neo4j Recommender Workshop - Prepared for VSIT College, Mumbai
+# Neo4j Recommender Workshop
 
 ## About Me
 
@@ -66,20 +66,28 @@ RETURN actor.name
 
 2. Login with Email ID and Password (if you use social login, don't forget to signout after the session)
 
-3. Choose project having GDS Library enabled
+3. Choose "Graph Data Science" from the "Featured Dataset" section
 
-4. Import Movies Dataset
+4. Open Neo4j Browser (it opens in a new tab)
 
-5. Data Exploration using Cypher Queries
+5. Click on authentication type and choose "Username and Password"
 
-6. Naive Recommender System using Cypher Queries (put dummy data of user watching movies)
+6. You can find the password in the "Connection Details" section on the sandbox page 
 
-    - Content Based Filtering
-    - Collaborative Filtering
+7. Your first step is to delete the existing data. Run the following command in the query editor
+```cypher
+MATCH (n) DETACH DELETE n;
+```
 
-7. Advanced Recommender System using Graph Data Science Library
 
-    - TODO
+## Want to practice more at home?
+
+You have a couple of options:
+1. Use Neo4j Sandbox - <a href="https://sandbox.neo4j.com" target="_blank">sandbox.neo4j.com</a>
+2. Aura DB - <a href="https://neo4j.com/product/auradb/" target="_blank">AuraDB</a>
+3. Aura Graph Analytics - <a href="https://neo4j.com/product/aura-graph-analytics/" target="_blank">Aura Graph Analytics</a> 
+4. Neo4j Desktop Application - <a href="https://neo4j.com/deployment-center/" target="_blank">Download Here</a>
+5. Local Setup using Docker Compose (instructions below)
 
 ## Local Setup for hands-on practice
 1. **Clone the Repository**  
@@ -111,4 +119,12 @@ RETURN actor.name
     - Neo4j Certified Professional
     - Neo4j Graph Data Science Certification
 
+- Neo4j Developer Blog on Medium - [Neo4j Developer Blog](https://medium.com/neo4j)
+
 - My session of QnA on Neo4j Knowledge Graph at Graph Database Mumbai Meetup - [Watch Here](https://youtu.be/JpysxH4Z5Fw)
+
+## Wait! What about AI ? 
+- Knowledge Graphs are being used to enhance AI models by providing structured context and relationships between data points.
+- Neo4j supports vector embeddings and similarity searches, making it easier to integrate with AI applications.
+3. LLM Graph Builder - [Neo4j LLM Graph Builder](https://neo4j.com/labs/genai-ecosystem/llm-graph-builder/) is a tool that helps in building knowledge graphs using large language models (LLMs).
+4. Don't forget, Data Science is also a key aspect of AI! Neo4j's Graph Data Science Library provides powerful algorithms for graph analytics and machine learning.
