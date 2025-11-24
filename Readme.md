@@ -1,6 +1,8 @@
 # Neo4j Recommender Workshop: From Zero to Graph Hero
 
-## 1. Introduction (10 Mins)
+![Hero Section](./public/header.png)
+
+## 1. Introduction
 
 ### Who Am I?
 *   **Susmit Vengurlekar**
@@ -11,43 +13,33 @@
 ### The Problem with SQL for Recommendations
 Imagine you want to find: *"Friends of my Friends who like movies I haven't seen yet."*
 
+![SQL vs Neo4j](./public/sql_neo4j.png)
+
 **In SQL (Relational DB):**
 You need a `Users` table, a `Movies` table, a `Friends` table, and a `Ratings` table.
 The query involves massive **JOINs**.
 *   Join User $\to$ Friends $\to$ Friends' Friends $\to$ Ratings $\to$ Movies.
-*   **Result:** It’s slow, complex, and computationally expensive (O(n) or worse).
+*   **Result:** It's slow, complex, and computationally expensive (O(n) or worse).
 
 **In Graph (Neo4j):**
 We just "walk" the connections.
-*   Me $\to$ (knows) $\to$ Friend $\to$ (knows) $\to$ FoF $\to$ (watched) $\to$ Movie.
+*   Me $\to$ (knows) $\to$ Friend $\to$ (knows) $\to$ FoF $\to$ (rated) $\to$ Movie.
 *   **Result:** Millisecond responses (O(1) - constant time based on relationship depth).
 
 ### What is a Knowledge Graph?
+
+![Knowledge Graph](./public/knowledge_graph.png)
+
 It is not a table. It is a network.
 *   **Nodes:** The "Things" (Nouns) - *e.g., Person, Movie*
 *   **Relationships:** The "Connections" (Verbs) - *e.g., ACTED_IN, RATED*
 *   **Properties:** Details about them - *e.g., Name, Title, Rating*
 
-#### Visualizing the Difference
-
-```mermaid
-flowchart LR
-    subgraph SQL_Perspective [SQL: Tables & Joins]
-    direction TB
-    T1[User Table] --- T2[Junction Table] --- T3[Movie Table]
-    end
-    
-    subgraph Graph_Perspective [Neo4j: Nodes & Links]
-    P((User: Susmit)) -->|RATED stars: 5| M((Movie: Matrix))
-    P -->|FRIENDS_WITH| F((User: Ishan))
-    end
-```
+![Intro](./public/neo_intro.jpeg)
 
 ---
 
-## 2. Neo4j Internals: Why is it so fast? (5 Mins)
-
-> **Instructor Concept:** "Index-Free Adjacency"
+## 2. Neo4j Internals: Why is it so fast? 
 
 In SQL, if I look for your friends, the DB scans an index (like the back of a book) to find the rows.
 In Neo4j, the data is stored as a **Linked List** on the hard disk.
@@ -72,7 +64,7 @@ graph LR
 
 ---
 
-## 3. Setup & Syntax (15 Mins)
+## 3. Setup & Syntax
 
 ### Hands-on: Get the Environment
 1.  Go to [sandbox.neo4j.com](https://sandbox.neo4j.com)
@@ -81,6 +73,9 @@ graph LR
 4.  Click **"Open"** (Neo4j Browser).
 
 ### The Cypher Syntax
+
+![Cypher Syntax](./public/cypher.png)
+
 Cypher is ASCII Art. You draw what you want to find.
 
 *   `()` represents a Node.
@@ -100,6 +95,9 @@ MATCH (u:User {id: 1}) RETURN u.name
 ```
 
 ### Step 0: Clean Slate
+
+![Clean Slate](./public/clean_slate.png)
+
 We need an empty database. Run this:
 ```cypher
 MATCH (n) DETACH DELETE n;
@@ -107,7 +105,7 @@ MATCH (n) DETACH DELETE n;
 
 ---
 
-## 4. Data Loading (The "ETL") (20 Mins)
+## 4. Data Loading
 
 We are building a Movie Recommender. We need **Constraints**, **Movies**, and **Ratings**.
 
@@ -123,8 +121,6 @@ CREATE CONSTRAINT genre_name IF NOT EXISTS FOR (g:Genre) REQUIRE g.name IS UNIQU
 
 ### A.1 Load Movies & Genres
 We will load a CSV, split the genres (e.g., "Action|Adventure"), and connect them.
-
-**Discussion:** Notice `MERGE`. It means "Create if it doesn't exist, otherwise just find it."
 
 **Run This:**
 ```cypher
@@ -143,6 +139,8 @@ UNWIND split(genres, "|") AS genre
 MERGE (g:Genre {name: genre})
 MERGE (m)-[:IN_GENRE]->(g);
 ```
+
+![Merge](./public/merge.png)
 
 ### A.2 Load Ratings
 Users rating movies. This connects the `User` nodes to the `Movie` nodes.
@@ -172,9 +170,12 @@ MATCH (n) RETURN n LIMIT 25
 
 ---
 
-## 5. Basic Recommendations (Cypher) (20 Mins)
+## 5. Basic Recommendations (Cypher)
 
 ### Rec Engine 1: Content-Based Filtering
+
+![content_based](./public/content_based.png)
+
 *   *Logic:* "You liked The Matrix? Here are other Action/Sci-Fi movies."
 
 **Exercise:** Find movies that share genres with "Toy Story (1995)".
@@ -190,6 +191,9 @@ LIMIT 10;
 ```
 
 ### Rec Engine 2: Collaborative Filtering (The "Wisdom of Crowds")
+
+![collaborative](./public/collaborative.png)
+
 *   *Logic:* "People who liked Toy Story also liked..."
 
 **The Analogy:**
@@ -217,7 +221,7 @@ LIMIT 10;
 
 ---
 
-## 6. Graph Data Science (GDS) (25 Mins)
+## 6. Graph Data Science (GDS)
 
 Before we run the code, we need to understand two concepts: **Projection** and **Similarity**.
 
@@ -371,3 +375,8 @@ F. Maxwell Harper and Joseph A. Konstan. 2015… https://doi.org/10.1145/2827872
 Note:
 The MovieLens dataset license applies only to the dataset.
 All workshop code and teaching material in this repository remain under the MIT License.
+
+## Disclaimer
+* This workshop is for educational purposes only.
+* The images used are for illustrative purposes and may not represent actual Neo4j products or services. 
+* AI generated content is used as is or with minor modifications for educational purposes.
