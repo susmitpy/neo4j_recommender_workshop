@@ -30,11 +30,6 @@ We just "walk" the connections.
 
 ![Knowledge Graph](./public/knowledge_graph.png)
 
-It is not a table. It is a network.
-*   **Nodes:** The "Things" (Nouns) - *e.g., Person, Movie*
-*   **Relationships:** The "Connections" (Verbs) - *e.g., ACTED_IN, RATED*
-*   **Properties:** Details about them - *e.g., Name, Title, Rating*
-
 ![Intro](./public/neo_intro.jpeg)
 
 ---
@@ -190,16 +185,12 @@ ORDER BY overlap DESC
 LIMIT 10;
 ```
 
-### Rec Engine 2: Collaborative Filtering (The "Wisdom of Crowds")
+### Rec Engine 2: Collaborative Filtering (The "Wisdom/Foolishness of Crowds")
 
 ![collaborative](./public/collaborative.png)
 
 *   *Logic:* "People who liked Toy Story also liked..."
 
-**The Analogy:**
-If User A likes Apples and Bananas.
-And User B likes Apples, Bananas, and **Cherries**.
-Then User A will probably like **Cherries**.
 
 **Exercise:** Find movies recommended by peers who also liked "Toy Story".
 
