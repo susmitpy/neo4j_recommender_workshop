@@ -346,3 +346,28 @@ You have a couple of options:
 - Knowledge Graphs are being used to enhance AI models by providing structured context and relationships between data points (RAG).
 - Neo4j supports vector embeddings and similarity searches, making it easier to integrate with AI applications.
 - LLM Graph Builder - [Neo4j LLM Graph Builder](https://neo4j.com/labs/genai-ecosystem/llm-graph-builder/) is a tool that helps in building knowledge graphs using large language models (LLMs).
+
+## Licenses
+
+Dataset License Notice
+
+This workshop uses the MovieLens ml-latest-small dataset, which is
+licensed by GroupLens Research, University of Minnesota, under the following conditions:
+
+Non-commercial use only
+
+Must include attribution
+
+Must not imply endorsement
+
+Redistribution allowed only under same terms
+
+Dataset source: https://grouplens.org/datasets/movielens/
+
+Citation:
+
+F. Maxwell Harper and Joseph A. Konstan. 2015… https://doi.org/10.1145/2827872
+
+Note:
+The MovieLens dataset license applies only to the dataset.
+All workshop code and teaching material in this repository remain under the MIT License.
