@@ -201,9 +201,7 @@ MATCH (m:Movie {title: "Toy Story (1995)"})
 // 2. Find users who liked it (Rating > 3)
 MATCH (m)<-[r1:RATED]-(u:User) WHERE r1.rating > 3
 // 3. Find other movies those users liked
-MATCH (u)-[r2:RATED]->(rec:Movie) WHERE r2.rating > 3
-// 4. Filter out Toy Story itself
-WHERE rec <> m
+MATCH (u)-[r2:RATED]->(rec:Movie) WHERE r2.rating > 3 AND rec <> m
 // 5. Rank by frequency
 RETURN rec.title, count(u) as frequent_recommendation
 ORDER BY frequent_recommendation DESC
@@ -259,6 +257,7 @@ We will use GDS to calculate this for *every single pair* of movies to find perf
 We load `Users`, `Movies`, and the `RATED` relationship into memory.
 
 ```cypher
+CALL gds.graph.drop('myGraph', false);
 CALL gds.graph.project(
   'myGraph',                // Name of graph in memory
   ['User', 'Movie'],        // Nodes to load
@@ -289,6 +288,17 @@ Now we know exactly which movies are mathematically similar.
 
 1.  Find "Inception".
 2.  Use the similarity math (from GDS) to find the closest match.
+
+**The Query:**
+```cypher
+MATCH (m:Movie {title: "Inception (2010)"})
+CALL gds.nodeSimilarity.stream('myGraph')
+YIELD node1, node2, similarity
+WHERE gds.util.asNode(node1) = m AND similarity > 0.1
+RETURN gds.util.asNode(node2).title AS Recommendation, similarity
+ORDER BY similarity DESC
+LIMIT 5;
+```
 
 *(Note: In a real app, we would `.write()` the similarity relationships back to the graph, but for this workshop, we demonstrated the `.stream()` calculation).*
 
