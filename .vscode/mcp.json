@@ -1,0 +1,9 @@
+{
+	"servers": {
+		"neo4j-sandbox": {
+			"url": "https://mcp.sandbox.neo4j.com/sse",
+			"type": "http"
+		}
+	},
+	"inputs": []
+}
