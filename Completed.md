@@ -181,16 +181,12 @@ MATCH p=(u:User)-[:RATED]->(m:Movie) RETURN p LIMIT 10
 ### Rec Engine 0: Popularity (The "Trending" List)
 Before we get personal, let's just see what everyone is watching.
 
-**Example:** Find the top 10 most rated movies.
+**Exercise:** Find the top 10 most rated movies.
 
-**Task:**
-Write a query to find the top 10 movies with the most ratings.
-
-**Template:**
 ```cypher
 MATCH (m:Movie)<-[:RATED]-(u) 
 RETURN m.title, count(u) as reviews 
-ORDER BY <FILL_IN_HERE> DESC 
+ORDER BY reviews DESC 
 LIMIT 10;
 ```
 
@@ -200,18 +196,15 @@ LIMIT 10;
 
 *   *Logic:* "You liked The Matrix? Here are other Action/Sci-Fi movies."
 
-**Example:** Find movies that share genres with "Toy Story (1995)".
+**Exercise:** Find movies that share genres with "Toy Story (1995)".
 
-**Task:**
-Complete the query to find movies that share genres with "Toy Story (1995)" and order them by the number of shared genres.
-
-**Template:**
+**The Query:**
 ```cypher
 MATCH (m:Movie {title: "Toy Story (1995)"})-[:IN_GENRE]->(g:Genre)
 MATCH (rec:Movie)-[:IN_GENRE]->(g)
 WHERE rec <> m // Don't recommend the movie itself
 RETURN rec.title, collect(g.name) as sharedGenres, count(g) as overlap
-ORDER BY <FILL_IN_HERE> DESC
+ORDER BY overlap DESC
 LIMIT 10;
 ```
 
@@ -222,19 +215,16 @@ LIMIT 10;
 *   *Logic:* "People who liked Toy Story also liked..."
 
 
-**Example:** Find movies recommended by peers who also liked "Toy Story".
+**Exercise:** Find movies recommended by peers who also liked "Toy Story".
 
-**Task:**
-Find users who liked "Toy Story (1995)" with a rating > 3, then find other movies they liked (rating > 3), and return the most frequently recommended movies.
-
-**Template:**
+**The Query:**
 ```cypher
 // 1. Find Toy Story
 MATCH (m:Movie {title: "Toy Story (1995)"})
 // 2. Find users who liked it (Rating > 3)
 MATCH (m)<-[r1:RATED]-(u:User) WHERE r1.rating > 3
 // 3. Find other movies those users liked
-MATCH (u)-[r2:RATED]->(rec:Movie) WHERE <FILL_IN_HERE> AND rec <> m
+MATCH (u)-[r2:RATED]->(rec:Movie) WHERE r2.rating > 3 AND rec <> m
 // 5. Rank by frequency
 RETURN rec.title, count(u) as frequent_recommendation
 ORDER BY frequent_recommendation DESC
@@ -289,17 +279,13 @@ We will use GDS to calculate this for *every single pair* of movies to find perf
 ### Step C.1: Create the Projection
 We load `Users`, `Movies`, and the `RATED` relationship into memory.
 
-**Task:**
-Create a graph projection named 'myGraph' with 'User' and 'Movie' nodes and 'RATED' relationships (UNDIRECTED).
-
-**Template:**
 ```cypher
 CALL gds.graph.drop('myGraph', false);
 CALL gds.graph.project(
   'myGraph',                // Name of graph in memory
   ['User', 'Movie'],        // Nodes to load
   {
-    RATED: {orientation: '<FILL_IN_HERE>'} // Treat rating as a two-way street
+    RATED: {orientation: 'UNDIRECTED'} // Treat rating as a two-way street
   }
 );
 ```
@@ -307,14 +293,10 @@ CALL gds.graph.project(
 ### Step C.2: Run Node Similarity
 This compares every movie to every other movie based on who watched them.
 
-**Task:**
-Run the Node Similarity algorithm on 'myGraph' and return pairs with similarity > 0.1.
-
-**Template:**
 ```cypher
 CALL gds.nodeSimilarity.stream('myGraph')
 YIELD node1, node2, similarity
-WHERE similarity > <FILL_IN_HERE>  // Only show strong matches
+WHERE similarity > 0.1  // Only show strong matches
 RETURN gds.util.asNode(node1).title AS Movie_A,
        gds.util.asNode(node2).title AS Movie_B,
        similarity
@@ -330,17 +312,14 @@ Now we know exactly which movies are mathematically similar.
 1.  Find "Inception".
 2.  Use the similarity math (from GDS) to find the closest match.
 
-**Task:**
-Find movies similar to "Inception (2010)" using the Node Similarity results.
-
-**Template:**
+**The Query:**
 ```cypher
 MATCH (m:Movie {title: "Inception (2010)"})
 CALL gds.nodeSimilarity.stream('myGraph')
 YIELD node1, node2, similarity
 WHERE gds.util.asNode(node1) = m AND similarity > 0.1
 RETURN gds.util.asNode(node2).title AS Recommendation, similarity
-ORDER BY <FILL_IN_HERE> DESC
+ORDER BY similarity DESC
 LIMIT 5;
 ```
 
