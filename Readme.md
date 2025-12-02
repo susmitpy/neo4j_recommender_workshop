@@ -348,6 +348,46 @@ LIMIT 5;
 
 ---
 
+### Concept 3: Personalized PageRank (PPR)
+
+While Node Similarity compares movies based on shared viewers, **Personalized PageRank** takes a different approach. It simulates a "random walk" through the graph starting from a specific node.
+
+Think of it like this: Imagine you're at "Inception" and you randomly walk to users who watched it, then to other movies they watched, then to other users, and so on. The movies you visit most frequently during this walk are considered most relevant to "Inception."
+
+**Key Differences from Node Similarity:**
+*   **Node Similarity:** "Which movies have the most overlapping viewers?"
+*   **Personalized PageRank:** "If I start from this movie and randomly explore, which movies am I most likely to end up at?"
+
+PPR captures not just direct similarity but also **transitive relationships** – movies connected through chains of users and other movies.
+
+### Step C.4: Run Personalized PageRank
+
+Let's find movies related to "Inception" using PPR.
+
+**Task:**
+Run Personalized PageRank starting from "Inception (2010)" and find the top recommended movies.
+
+**Template:**
+```cypher
+// First, find the Inception node
+MATCH (source:Movie {title: "Inception (2010)"})
+// Run Personalized PageRank with Inception as the source
+CALL gds.pageRank.stream('myGraph', {
+  maxIterations: 20,
+  dampingFactor: 0.85,
+  sourceNodes: [source]
+})
+YIELD nodeId, score
+// Get the movie nodes and filter out the source
+WITH gds.util.asNode(nodeId) AS movie, score
+WHERE movie:Movie AND movie.title <> "Inception (2010)"
+RETURN movie.title AS Recommendation, score
+ORDER BY <FILL_IN_HERE> DESC
+LIMIT 10;
+```
+
+---
+
 ## Want to practice more at home?
 
 You have a couple of options:
