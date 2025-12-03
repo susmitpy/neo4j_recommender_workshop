@@ -80,3 +80,24 @@ RETURN gds.util.asNode(node2).title AS Recommendation, similarity
 ORDER BY similarity DESC
 LIMIT 5;
 ```
+
+### Step C.4: Run Personalized PageRank
+**Exercise:** Run Personalized PageRank starting from "Inception (2010)" and find the top recommended movies.
+
+```cypher
+// First, find the Inception node
+MATCH (source:Movie {title: "Inception (2010)"})
+// Run Personalized PageRank with Inception as the source
+CALL gds.pageRank.stream('myGraph', {
+  maxIterations: 20,
+  dampingFactor: 0.85,
+  sourceNodes: [source]
+})
+YIELD nodeId, score
+// Get the movie nodes and filter out the source
+WITH gds.util.asNode(nodeId) AS movie, score
+WHERE movie:Movie AND movie.title <> "Inception (2010)"
+RETURN movie.title AS Recommendation, score
+ORDER BY score DESC
+LIMIT 10;
+```
