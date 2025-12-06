@@ -10,3 +10,4 @@ services:
       - NEO4J_PLUGINS=["graph-data-science"]
     volumes:
       - ./neo4j_data:/data
+      - ./ml-latest-small:/var/lib/neo4j/import

@@ -404,6 +404,12 @@ You have a couple of options:
     - Username: `neo4j`
     - Password: `test1234`
 
+4. **Loading Data**
+   The MovieLens dataset is already included in the `ml-latest-small` folder and mounted to the Neo4j import directory. You can run the following snippet to load the local csv file:
+    ```cypher
+    LOAD CSV WITH HEADERS FROM 'file:///links.csv' AS row
+    ```
+
 ## Learning Resources
 
 - Neo4j Official Documentation - [Neo4j Docs](https://neo4j.com/docs/)
