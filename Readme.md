@@ -2,18 +2,7 @@
 
 ![Hero Section](./public/header.png)
 
-> **Welcome VSIT Wadala (TY CS) Students!**  
-> This workshop is designed to take you from relational database concepts to building a real-time recommendation engine using Graph Technology in just over an hour.
-
-## Workshop Agenda (1 hr 10 mins)
-1.  **Introduction & Concepts (10 mins)**: Why Graph? SQL vs Graph.
-2.  **Neo4j Internals (5 mins)**: How it works under the hood (Linked Lists).
-3.  **Setup & Syntax (10 mins)**: Getting started with Cypher.
-4.  **Data Loading (15 mins)**: Building the Movie Graph.
-5.  **Basic Recommendations (15 mins)**: Writing your first recommendation queries.
-6.  **Graph Data Science (15 mins)**: Advanced similarity algorithms.
-
-## 1. Introduction (10 mins)
+## 1. Introduction
 
 ### Who Am I?
 *   **Susmit Vengurlekar**
@@ -45,7 +34,7 @@ We just "walk" the connections.
 
 ---
 
-## 2. Neo4j Internals: Why is it so fast? (5 mins)
+## 2. Neo4j Internals: Why is it so fast?
 
 In SQL, if I look for your friends, the DB scans an index (like the back of a book) to find the rows.
 In Neo4j, the data is stored as a **Linked List** on the hard disk.
@@ -70,7 +59,7 @@ graph LR
 
 ---
 
-## 3. Setup & Syntax (10 mins)
+## 3. Setup & Syntax
 
 ### Hands-on: Get the Environment
 1.  Go to [sandbox.neo4j.com](https://sandbox.neo4j.com)
@@ -111,7 +100,7 @@ MATCH (n) DETACH DELETE n;
 
 ---
 
-## 4. Data Loading (15 mins)
+## 4. Data Loading
 
 We are building a Movie Recommender. We need **Constraints**, **Movies**, and **Ratings**.
 
@@ -176,7 +165,7 @@ MATCH p=(u:User)-[:RATED]->(m:Movie) RETURN p LIMIT 10
 
 ---
 
-## 5. Basic Recommendations (Cypher) (15 mins)
+## 5. Basic Recommendations (Cypher)
 
 ### Rec Engine 0: Popularity (The "Trending" List)
 Before we get personal, let's just see what everyone is watching.
@@ -243,7 +232,7 @@ LIMIT 10;
 
 ---
 
-## 6. Graph Data Science (GDS) (15 mins)
+## 6. Graph Data Science (GDS)
 
 Before we run the code, we need to understand two concepts: **Projection** and **Similarity**.
 
@@ -435,6 +424,7 @@ You have a couple of options:
 - Knowledge Graphs are being used to enhance AI models by providing structured context and relationships between data points (RAG).
 - Neo4j supports vector embeddings and similarity searches, making it easier to integrate with AI applications.
 - LLM Graph Builder - [Neo4j LLM Graph Builder](https://neo4j.com/labs/genai-ecosystem/llm-graph-builder/) is a tool that helps in building knowledge graphs using large language models (LLMs).
+- Neo4j MCP Server
 
 ## Licenses
 

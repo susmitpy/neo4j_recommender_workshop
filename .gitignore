@@ -1,2 +1,4 @@
 .DS_Store
 .vscode/mcp.json
+neo4j_data/
+!neo4j_data/empty.txt
