@@ -494,10 +494,10 @@ You have a couple of options:
 
 ## Wait! What about AI ? 
 - Knowledge Graphs are being used to enhance AI models by providing structured context and relationships between data points (RAG).
-  - [Invoice Chatbot](https://github.com/vivekvedant/invoice_chatbot) by [Vivek Vedant](https://www.linkedin.com/in/vivek-vedant/)
 - Neo4j supports vector embeddings and similarity searches, making it easier to integrate with AI applications.
 - LLM Graph Builder - [Neo4j LLM Graph Builder](https://neo4j.com/labs/genai-ecosystem/llm-graph-builder/) is a tool that helps in building knowledge graphs using large language models (LLMs).
 - Neo4j MCP Server
+- Example Project - [Invoice Chatbot](https://github.com/vivekvedant/invoice_chatbot) by [Vivek Vedant](https://www.linkedin.com/in/vivek-vedant/)
 
 ## Licenses
 
