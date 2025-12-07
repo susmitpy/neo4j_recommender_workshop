@@ -7,5 +7,7 @@ services:
       - "7687:7687" # Bolt
     environment:
       - NEO4J_AUTH=neo4j/test1234
+      - NEO4J_PLUGINS=["graph-data-science"]
     volumes:
-      - neo4j_data:/data
+      - ./neo4j_data:/data
+      - ./ml-latest-small:/var/lib/neo4j/import
