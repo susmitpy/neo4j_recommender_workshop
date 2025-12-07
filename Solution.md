@@ -31,7 +31,8 @@ LIMIT 10;
 // 1. Find Toy Story
 MATCH (m:Movie {title: "Toy Story (1995)"})
 // 2. Find users who liked it (Rating > 3)
-MATCH (m)<-[r1:RATED]-(u:User) WHERE r1.rating > 3
+MATCH (u:User)-[r1:RATED]->(m) 
+WHERE r1.rating > 3
 // 3. Find other movies those users liked
 MATCH (u)-[r2:RATED]->(rec:Movie) WHERE r2.rating > 3 AND rec <> m
 // 5. Rank by frequency

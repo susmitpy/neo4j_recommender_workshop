@@ -63,13 +63,14 @@ graph LR
 
 ### Hands-on: Get the Environment
 1.  Go to [sandbox.neo4j.com](https://sandbox.neo4j.com)
-2.  Login (Email/Google).
-3.  Select **"Graph Data Science"** (Featured Project).
-4.  Click **"Open"** (Neo4j Browser).
+2. Signup
+3. Type your email (avoid social login on shared computers)
+4. After login, proceed to create project
+4.  Select **"Graph Data Science"** (Featured Project).
+5.  Click **"Open"** (Neo4j Browser).
 
 ### The Cypher Syntax
 
-![Cypher Syntax](./public/cypher.png)
 
 Cypher is ASCII Art. You draw what you want to find.
 
@@ -104,7 +105,7 @@ MATCH (n) DETACH DELETE n;
 
 We are building a Movie Recommender. We need **Constraints**, **Movies**, and **Ratings**.
 
-### A.0 Create vs Merge
+### A.0 The Basics
 **1. Create a Test User and Movie**
 First, create "Alice" and "The Matrix".
 ```cypher
@@ -167,11 +168,31 @@ MATCH (n) DETACH DELETE n;
 ### A.1 Create Constraints
 (Ensures we don't have duplicate Movies or Users. Like a Primary Key in SQL).
 
+**View current indexes and constraints**
+```cypher
+show index
+```
+
+```cypher
+show constraints
+```
+
 **Copy/Paste:**
 ```cypher
 CREATE CONSTRAINT user_id IF NOT EXISTS FOR (u:User) REQUIRE u.userId IS UNIQUE;
 CREATE CONSTRAINT movie_id IF NOT EXISTS FOR (m:Movie) REQUIRE m.movieId IS UNIQUE;
 CREATE CONSTRAINT genre_name IF NOT EXISTS FOR (g:Genre) REQUIRE g.name IS UNIQUE;
+```
+
+**Note:** An index is auto-created for all unique constraints. 
+
+**View current indexes and constraints**
+```cypher
+show constraints
+```
+
+```cypher
+show index
 ```
 
 ### A.2 Load Movies & Genres
@@ -195,8 +216,6 @@ MERGE (g:Genre {name: genre})
 MERGE (m)-[:IN_GENRE]->(g);
 ```
 
-![Merge](./public/merge.png)
-
 ### A.3 Load Ratings
 Users rating movies. This connects the `User` nodes to the `Movie` nodes.
 
@@ -216,10 +235,11 @@ SET r.rating = rating;
 ```
 
 ### A.4 Verify the Data
-Let's look at what we built.
 
 ```cypher
-MATCH p=(u:User)-[:RATED]->(m:Movie) RETURN p LIMIT 10
+MATCH 
+    p=(u:User {userId:300})-[:RATED]->(m:Movie)-[:IN_GENRE]->(g:Genre)
+RETURN p LIMIT 10
 ```
 *(Double-click the bubbles to expand them!)*
 
@@ -230,16 +250,14 @@ MATCH p=(u:User)-[:RATED]->(m:Movie) RETURN p LIMIT 10
 ### Rec Engine 0: Popularity (The "Trending" List)
 Before we get personal, let's just see what everyone is watching.
 
-**Example:** Find the top 10 most rated movies.
-
 **Task:**
 Write a query to find the top 10 movies with the most ratings.
 
 **Template:**
 ```cypher
-MATCH (m:Movie)<-[:RATED]-(u) 
+MATCH (m:<FILL>)<-[:RATED]-(u) 
 RETURN m.title, count(u) as reviews 
-ORDER BY <FILL_IN_HERE> DESC 
+ORDER BY <FILL> 
 LIMIT 10;
 ```
 
@@ -249,18 +267,16 @@ LIMIT 10;
 
 *   *Logic:* "You liked The Matrix? Here are other Action/Sci-Fi movies."
 
-**Example:** Find movies that share genres with "Toy Story (1995)".
-
 **Task:**
 Complete the query to find movies that share genres with "Toy Story (1995)" and order them by the number of shared genres.
 
 **Template:**
 ```cypher
-MATCH (m:Movie {title: "Toy Story (1995)"})-[:IN_GENRE]->(g:Genre)
+MATCH (m:Movie {title: "Toy Story (1995)"})- <FILL> ->(g:Genre)
 MATCH (rec:Movie)-[:IN_GENRE]->(g)
-WHERE rec <> m // Don't recommend the movie itself
+WHERE rec <> <FILL> // Don't recommend the movie itself
 RETURN rec.title, collect(g.name) as sharedGenres, count(g) as overlap
-ORDER BY <FILL_IN_HERE> DESC
+ORDER BY <FILL> DESC
 LIMIT 10;
 ```
 
@@ -270,9 +286,6 @@ LIMIT 10;
 
 *   *Logic:* "People who liked Toy Story also liked..."
 
-
-**Example:** Find movies recommended by peers who also liked "Toy Story".
-
 **Task:**
 Find users who liked "Toy Story (1995)" with a rating > 3, then find other movies they liked (rating > 3), and return the most frequently recommended movies.
 
@@ -281,9 +294,10 @@ Find users who liked "Toy Story (1995)" with a rating > 3, then find other movie
 // 1. Find Toy Story
 MATCH (m:Movie {title: "Toy Story (1995)"})
 // 2. Find users who liked it (Rating > 3)
-MATCH (m)<-[r1:RATED]-(u:User) WHERE r1.rating > 3
+MATCH (u:User)-[r1:RATED]->(m) 
+WHERE <FILL>
 // 3. Find other movies those users liked
-MATCH (u)-[r2:RATED]->(rec:Movie) WHERE <FILL_IN_HERE> AND rec <> m
+MATCH <FILL> WHERE r2.rating > 3 AND rec <> m
 // 5. Rank by frequency
 RETURN rec.title, count(u) as frequent_recommendation
 ORDER BY frequent_recommendation DESC
@@ -294,14 +308,9 @@ LIMIT 10;
 
 ## 6. Graph Data Science (GDS)
 
-Before we run the code, we need to understand two concepts: **Projection** and **Similarity**.
+### The Graph Projection (The Workbench)
 
-### Concept 1: The Graph Projection (The Workbench)
-
-Neo4j stores data on disk (Database). GDS algorithms run in RAM (Memory).
-We cannot run complex math directly on the disk because it would be too slow if thousands of users are updating data at the same time.
-
-We create a **Projection**: We take a snapshot of the graph, load it into RAM, and run our math there.
+Neo4j stores data on disk (Database). GDS algorithms run in RAM (Memory). So we create a **Projection**: We take a snapshot of the graph, load it into RAM, and run our math there.
 
 ```mermaid
 graph LR
@@ -320,7 +329,7 @@ graph LR
     Memory -->|Write Results| Disk
 ```
 
-### Concept 2: Node Similarity (Jaccard Index)
+### Node Similarity (Jaccard Index)
 
 How do we know if User A and User B are similar? We look at the **Overlap**.
 
@@ -346,9 +355,9 @@ Create a graph projection named 'myGraph' with 'User' and 'Movie' nodes and 'RAT
 CALL gds.graph.drop('myGraph', false);
 CALL gds.graph.project(
   'myGraph',                // Name of graph in memory
-  ['User', 'Movie'],        // Nodes to load
+  ['User', <FILL>],        // Nodes to load
   {
-    RATED: {orientation: '<FILL_IN_HERE>'} // Treat rating as a two-way street
+    RATED: {orientation: '<FILL>'} // Treat rating as a two-way street
   }
 );
 ```
@@ -363,9 +372,9 @@ Run the Node Similarity algorithm on 'myGraph' and return pairs with similarity 
 ```cypher
 CALL gds.nodeSimilarity.stream('myGraph')
 YIELD node1, node2, similarity
-WHERE similarity > <FILL_IN_HERE>  // Only show strong matches
+WHERE similarity > <FILL>  // Only show strong matches
 RETURN gds.util.asNode(node1).title AS Movie_A,
-       gds.util.asNode(node2).title AS Movie_B,
+       <FILL>
        similarity
 ORDER BY similarity DESC
 LIMIT 10;
@@ -374,22 +383,19 @@ LIMIT 10;
 ### Step C.3: The "Hybrid" Recommendation
 Now we know exactly which movies are mathematically similar.
 
-**Scenario:** I just watched **"Inception"**. What should I watch next?
+**Task:** I just watched **"Inception"**. What should I watch next?
 
-1.  Find "Inception".
+1.  Find "Inception (2010)".
 2.  Use the similarity math (from GDS) to find the closest match.
-
-**Task:**
-Find movies similar to "Inception (2010)" using the Node Similarity results.
 
 **Template:**
 ```cypher
-MATCH (m:Movie {title: "Inception (2010)"})
-CALL gds.nodeSimilarity.stream('myGraph')
+MATCH (m:Movie <FILL>)
+CALL <FILL>
 YIELD node1, node2, similarity
 WHERE gds.util.asNode(node1) = m AND similarity > 0.1
 RETURN gds.util.asNode(node2).title AS Recommendation, similarity
-ORDER BY <FILL_IN_HERE> DESC
+ORDER BY <FILL> DESC
 LIMIT 5;
 ```
 
@@ -397,7 +403,7 @@ LIMIT 5;
 
 ---
 
-### Concept 3: Personalized PageRank (PPR)
+### Personalized PageRank (PPR)
 
 While Node Similarity compares movies based on shared viewers, **Personalized PageRank** takes a different approach. It simulates a "random walk" through the graph starting from a specific node.
 
@@ -430,8 +436,8 @@ YIELD nodeId, score
 // Get the movie nodes and filter out the source
 WITH gds.util.asNode(nodeId) AS movie, score
 WHERE movie:Movie AND movie.title <> "Inception (2010)"
-RETURN movie.title AS Recommendation, score
-ORDER BY <FILL_IN_HERE> DESC
+RETURN <FILL>
+ORDER BY <FILL> DESC
 LIMIT 10;
 ```
 
@@ -488,6 +494,7 @@ You have a couple of options:
 
 ## Wait! What about AI ? 
 - Knowledge Graphs are being used to enhance AI models by providing structured context and relationships between data points (RAG).
+  - [Invoice Chatbot](https://github.com/vivekvedant/invoice_chatbot) by [Vivek Vedant](https://www.linkedin.com/in/vivek-vedant/)
 - Neo4j supports vector embeddings and similarity searches, making it easier to integrate with AI applications.
 - LLM Graph Builder - [Neo4j LLM Graph Builder](https://neo4j.com/labs/genai-ecosystem/llm-graph-builder/) is a tool that helps in building knowledge graphs using large language models (LLMs).
 - Neo4j MCP Server
