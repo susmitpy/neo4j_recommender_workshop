@@ -104,7 +104,67 @@ MATCH (n) DETACH DELETE n;
 
 We are building a Movie Recommender. We need **Constraints**, **Movies**, and **Ratings**.
 
-### A.0 Create Constraints
+### A.0 Create vs Merge
+**1. Create a Test User and Movie**
+First, create "Alice" and "The Matrix".
+```cypher
+CREATE (u:User {name: "Alice"})
+CREATE (m:Movie {title: "The Matrix"});
+```
+
+**2. Verify Creation**
+See what we have.
+```cypher
+MATCH (n) RETURN n;
+```
+*(You should see 1 User and 1 Movie)*
+
+**3. Task (Try this query)**
+Now, we want to record that Alice rated The Matrix. Run this:
+```cypher
+MATCH (m:Movie {title: "The Matrix"})
+MERGE (u:User {name: "Alice"})-[r:RATED]->(m)
+SET r.rating = 5;
+```
+
+**4. Correct ??**
+Check the graph again.
+```cypher
+MATCH (n) RETURN n;
+```
+
+**The why behind what happened**
+`MERGE` matches the **entire pattern**. Since the pattern "Alice connected to Matrix" didn't exist, Neo4j created the *entire pattern*—including a brand new Alice node!
+
+**5. Cleanup**
+Let's wipe that mistake.
+```cypher
+MATCH (u:User {name: "Alice"})-[r:RATED]->(m:Movie)
+DELETE r, u;
+```
+
+**6. The Correct Way**
+To avoid duplicates, `MERGE` the node first (to find it), THEN `MERGE` the relationship.
+```cypher
+MATCH (m:Movie {title: "The Matrix"})
+MERGE (u:User {name: "Alice"})      // Find or Create Alice
+MERGE (u)-[r:RATED]->(m)            // Then connect them
+SET r.rating = 5;
+```
+
+**7. Final Verification**
+```cypher
+MATCH (n) RETURN n;
+```
+*(Now you have 1 Alice connected to 1 Matrix. Perfect.)*
+
+**8. Clean Slate (Again)**
+Now delete everything so we can start the real workshop.
+```cypher
+MATCH (n) DETACH DELETE n;
+```
+
+### A.1 Create Constraints
 (Ensures we don't have duplicate Movies or Users. Like a Primary Key in SQL).
 
 **Copy/Paste:**
@@ -114,7 +174,7 @@ CREATE CONSTRAINT movie_id IF NOT EXISTS FOR (m:Movie) REQUIRE m.movieId IS UNIQ
 CREATE CONSTRAINT genre_name IF NOT EXISTS FOR (g:Genre) REQUIRE g.name IS UNIQUE;
 ```
 
-### A.1 Load Movies & Genres
+### A.2 Load Movies & Genres
 We will load a CSV, split the genres (e.g., "Action|Adventure"), and connect them.
 
 **Run This:**
@@ -137,7 +197,7 @@ MERGE (m)-[:IN_GENRE]->(g);
 
 ![Merge](./public/merge.png)
 
-### A.2 Load Ratings
+### A.3 Load Ratings
 Users rating movies. This connects the `User` nodes to the `Movie` nodes.
 
 **Run This:**
@@ -155,7 +215,7 @@ MERGE (u)-[r:RATED]->(m)
 SET r.rating = rating;
 ```
 
-### A.3 Verify the Data
+### A.4 Verify the Data
 Let's look at what we built.
 
 ```cypher
