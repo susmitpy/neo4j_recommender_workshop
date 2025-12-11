@@ -53,6 +53,7 @@ graph LR
     NodeA -.->|Direct Pointer| Rel1001
     Rel1001 -.->|Direct Pointer| Rel1002
     Rel1001 -.->|Points to| NodeB
+
 ```
 
 **The Magic:** To find friends, Neo4j doesn't "search." It just "chases pointers." This is called **Index-Free Adjacency**. It converts a search problem into a traversal problem.
