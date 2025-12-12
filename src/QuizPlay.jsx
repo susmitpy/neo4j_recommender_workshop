@@ -64,11 +64,19 @@ function QuizPlay() {
   }, [timeLeft, isQuizActive]);
 
   // FIX #5: Reset timer when question changes
+  // Use a ref to track if this is the initial render to prevent unwanted resets
+  const isInitialMount = useRef(true);
+  
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    
     if (isQuizActive) {
       setTimeLeft(20);
     }
-  }, [currentQuestion, isQuizActive]);
+  }, [currentQuestion]); // Only depend on currentQuestion, not isQuizActive
 
   const startQuiz = () => {
     setIsQuizActive(true);
@@ -144,12 +152,7 @@ function QuizPlay() {
             ))}
           </div>
           
-          <button 
-            onClick={handleNextQuestion}
-            style={{ marginTop: '20px', padding: '10px 20px', fontSize: '14px' }}
-          >
-            Skip Question
-          </button>
+          {/* Skip button removed - progression is automated when time runs out */}
         </div>
       )}
       
@@ -160,7 +163,8 @@ function QuizPlay() {
           <li>useRef stores interval ID persistently across renders</li>
           <li>Separate effects for timer logic and question changes</li>
           <li>Timer resets only when question changes (by design)</li>
-          <li>No more excessive rerenders or timer resets</li>
+          <li>Removed isQuizActive dependency from reset effect - prevents unwanted resets from external triggers</li>
+          <li>Skip button removed - progression is automated when time expires</li>
         </ul>
       </div>
     </div>

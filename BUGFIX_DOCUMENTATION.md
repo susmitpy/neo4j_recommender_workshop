@@ -87,11 +87,19 @@ useEffect(() => {
 }, [timeLeft, isQuizActive]);
 
 // Effect #3: Reset timer when question changes
+// Use isInitialMount ref to prevent reset on component mount
+const isInitialMount = useRef(true);
+
 useEffect(() => {
+  if (isInitialMount.current) {
+    isInitialMount.current = false;
+    return;
+  }
+  
   if (isQuizActive) {
     setTimeLeft(20);
   }
-}, [currentQuestion, isQuizActive]);
+}, [currentQuestion]); // Only depends on currentQuestion
 ```
 
 **Benefits:**
@@ -99,6 +107,7 @@ useEffect(() => {
 - Easier to understand and maintain
 - Reduces unnecessary rerenders
 - Timer resets only when question changes (by design)
+- Removed isQuizActive dependency to prevent resets from external triggers (e.g., network pings)
 
 ## Key Lessons
 
