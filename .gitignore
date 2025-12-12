@@ -2,3 +2,15 @@
 .vscode/mcp.json
 neo4j_data/
 !neo4j_data/empty.txt
+
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build output
+build/
+dist/
+
+# Environment variables
+.env
+.env.local
