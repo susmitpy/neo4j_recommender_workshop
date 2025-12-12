@@ -70,6 +70,7 @@ graph LR
 4.  Select **"Graph Data Science"** (Featured Project).
 5.  Click on **Create**
 6.  Click **"Open"** (Neo4j Browser).
+7.  Refer to the downloaded txt file for database user and password
 
 ### The Cypher Syntax
 
@@ -100,6 +101,8 @@ We need an empty database. Run this:
 ```cypher
 MATCH (n) DETACH DELETE n;
 ```
+
+Click on run button or press Ctrl+Enter.
 
 ---
 
@@ -133,7 +136,7 @@ SET r.rating = 5;
 **4. Correct ??**
 Check the graph again.
 ```cypher
-MATCH (n) RETURN n;
+MATCH (n) OPTIONAL MATCH (n)-[r]-() RETURN n, r;
 ```
 
 **The why behind what happened**
@@ -157,7 +160,7 @@ SET r.rating = 5;
 
 **7. Final Verification**
 ```cypher
-MATCH (n) RETURN n;
+MATCH (n) OPTIONAL MATCH (n)-[r]-() RETURN n, r;
 ```
 *(Now you have 1 Alice connected to 1 Matrix. Perfect.)*
 
@@ -499,7 +502,7 @@ You have a couple of options:
 - Neo4j supports vector embeddings and similarity searches, making it easier to integrate with AI applications.
 - LLM Graph Builder - [Neo4j LLM Graph Builder](https://neo4j.com/labs/genai-ecosystem/llm-graph-builder/) is a tool that helps in building knowledge graphs using large language models (LLMs).
 - Neo4j MCP Server
-- Example Project - [Invoice Chatbot](https://github.com/vivekvedant/invoice_chatbot) by [Vivek Vedant](https://www.linkedin.com/in/vivek-vedant/)
+- Example Project using Neo4j - [Invoice Chatbot](https://github.com/vivekvedant/invoice_chatbot) by [Vivek Vedant](https://www.linkedin.com/in/vivek-vedant/)
 
 ## Licenses
 
