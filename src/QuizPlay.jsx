@@ -34,7 +34,7 @@ function QuizPlay() {
       intervalRef.current = setInterval(() => {
         setTimeLeft(prevTime => {
           if (prevTime <= 1) {
-            return prevTime; // Don't go negative, handleTimeOut will be called separately
+            return prevTime; // Don't go negative, separate useEffect will detect timeLeft === 0 and call handleTimeOut
           }
           return prevTime - 1;
         });
