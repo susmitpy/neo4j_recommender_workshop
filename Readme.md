@@ -68,7 +68,8 @@ graph LR
 3. Type your email (avoid social login on shared computers)
 4. After login, proceed to create project
 4.  Select **"Graph Data Science"** (Featured Project).
-5.  Click **"Open"** (Neo4j Browser).
+5.  Click on **Create**
+6.  Click **"Open"** (Neo4j Browser).
 
 ### The Cypher Syntax
 
