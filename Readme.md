@@ -70,7 +70,8 @@ graph LR
 4.  Select **"Graph Data Science"** (Featured Project).
 5.  Click on **Create**
 6.  Click **"Open"** (Neo4j Browser).
-7.  Refer to the downloaded txt file for database user and password
+7.  Refer to the downloaded txt file for database user and password / Connection Details tab
+8.  Be sure to terminate the sandbox after the workshop !
 
 ### The Cypher Syntax
 
